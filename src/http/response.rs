@@ -15,7 +15,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub fn new(request: HttpRequest) -> io::Result<HttpResponse> {
+    pub fn new(request: &HttpRequest) -> io::Result<HttpResponse> {
         let version: Version = Version::V2_0;
         let mut status: ResponseStatus = ResponseStatus::NotFound;
         let mut content_length: usize = 0;
@@ -24,24 +24,26 @@ impl HttpResponse {
         let mut response_body = String::new();
 
         let server_root_path = std::env::current_dir()?;
-        let resource = request.resource.path;
+        let resource = request.resource.path.clone();
         let new_path = server_root_path.join(resource);
         if new_path.exists() {
             if new_path.is_file() {
                 let content = std::fs::read_to_string(&new_path)?;
-                response_body.push_str(&content);
                 content_length = content.len();
                 status = ResponseStatus::OK;
                 accept_ranges = AcceptRanges::Bytes;
+                let content = format!("{} {}\n{}\ncontent-length: {}\r\n\r\n{}", version, status, accept_ranges, content_length, content);
+                response_body.push_str(&content);
 
             } else {
-                let content = format!("{} {}\n{}\ncontent-length: {}\r\n\r\n\
-                <html>
+                let four_o_four = "<html>
                 <body>
-                <h1>404 NOT FOUND</h1>    
+                <h1>404 NOT FOUND</h1>
                 </body>
-                </html>
-                ", version, status, accept_ranges, content_length);
+                </html>";
+                content_length = four_o_four.len();
+                let content = format!("{} {}\n{}\ncontent-length: {}\r\n\r\n{}
+                ", version, status, accept_ranges, content_length, four_o_four);
                 response_body.push_str(&content);
             }
         }

@@ -17,11 +17,14 @@ fn handle_client(stream: &mut TcpStream) -> io::Result<()> {
 
     let buf_str = String::from_utf8_lossy(&buffer);
     let request = request::HttpRequest::new(&buf_str)?;
+    let response = request.response()?;
 
-    println!("{:?}", request);
-    println!("{}", &request.request_body);
+    println!("{:?}", &response);
+    println!("{}", &response.response_body);
 
-    stream.write(&mut buffer)?;
+    let body = response.response_body.clone();
+
+    stream.write(&mut body.as_bytes())?;
     stream.flush();
     Ok(())
 }

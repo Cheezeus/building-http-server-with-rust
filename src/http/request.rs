@@ -1,5 +1,7 @@
 use std::{collections::HashMap, fmt::Display, io, str::FromStr};
 
+use super::response::HttpResponse;
+
 #[derive(Debug)]
 pub struct HttpRequest {
     method: Method,
@@ -10,6 +12,10 @@ pub struct HttpRequest {
 }
 
 impl HttpRequest {
+    pub fn response(&self) -> io::Result<HttpResponse> {
+        HttpResponse::new(self)
+    }
+
     pub fn new(request: &str) -> io::Result<HttpRequest> {
         let method: Method = Method::new(request);
         let resource: Resource = if let Some(resource) = Resource::new(request) {
